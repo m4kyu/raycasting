@@ -1,11 +1,10 @@
 #include <raylib.h>
-#include <stdio.h>
 #include <math.h>
 
 
 
-float pos_x = 100;
-float pos_y = 100;  
+float pos_x = 110;
+float pos_y = 110;  
 int rotation = 0;
 float dx = 0;
 float dy = 1;
@@ -27,7 +26,7 @@ void drawMap();
 
 
 int main() {
-  InitWindow(500, 500, "raycasting");
+  InitWindow(500 * 2, 500, "raycasting");
   SetTargetFPS(60);
 
     dy = sin(rotation * PI / 180);
@@ -39,7 +38,7 @@ int main() {
     ClearBackground(BLACK);
     drawMap();
     drawPlayer();
-    castRays(70);
+    castRays(60);
 
     DrawFPS(0, 0);
     EndDrawing();
@@ -73,27 +72,66 @@ void drawMap() {
 void castRays(int fov) {
   float norm_x = (float)((int)pos_x % 100) / 100; 
   float norm_y = (float)((int)pos_y % 100) / 100;
-  int index_x = pos_x / 100;
-  int index_y = pos_y / 100;
- 
 
-  for (int i = -fov/2; i < fov / 2; i++) {
+
+  for (int i = -fov/2, j = 0; i < fov/2; i++, j++) {
+      int index_x = pos_x / 100;
+  int index_y = pos_y / 100;
+
     float diry = sin((rotation + i) * PI / 180); 
     float dirx = cos((rotation + i) * PI / 180); 
     int cor_x = index_x, cor_y = index_y;
 
     Vector2 step = {sqrtf(1 + (diry / dirx) * (diry / dirx)), sqrtf(1 + (dirx / diry) * (dirx / diry))};
-    Vector2 vstep = {0};
-       
+    Vector2 stepdir = {0};
+    Vector2 rayLen = {0};
+
+    if (dirx < 0) {
+			stepdir.x = -1;
+			rayLen.x = norm_x * step.x;
+		} else {
+			stepdir.x = 1;
+			rayLen.x =  (1 - norm_x) * step.x;
+		}
 
 
-    DrawLineEx((Vector2){pos_x, pos_y}, (Vector2){pos_x + 200 *dirx, pos_y + 200 * diry}, 1, GREEN);
+	  if (diry < 0) {
+			stepdir.y = -1;
+			rayLen.y = norm_y * step.y;
+		} else {
+			stepdir.y = 1;
+		  rayLen.y = (1 - norm_y) * step.y;
+		}
+
+
+    int hit = 0;
+		float distance = 0.0f;
+		while (!hit)  {
+			if (rayLen.x < rayLen.y) {
+				index_x += stepdir.x;
+				distance = rayLen.x;
+				rayLen.x += step.x;
+			} else {
+				index_y += stepdir.y;
+				distance = rayLen.y;
+				rayLen.y += step.y;
+			}
+
+			if (index_x >= 0 && index_x < 5 && index_y >= 0 && index_y < 5) {
+				if (map[index_y][index_x] == 1)
+					hit = 1;
+			}
+		}
+
+    float wall_size = 500 / (distance * 3); 
+    distance *= 100;
+    DrawLineEx((Vector2){pos_x, pos_y}, (Vector2){pos_x + distance * dirx, pos_y + distance * diry}, 1, GREEN);
+    DrawLineEx((Vector2){500 + (j * 10), 250 - (wall_size / 2)}, (Vector2){500 + (j * 10), 250 + (wall_size / 2)}, 10, GREEN);
   }
 }
 
 void move() {
   if (IsKeyDown(KEY_W)) {
-    printf("DX: %f. DY: %f\n", dx, dy);
     pos_y += 1 * dy;
     pos_x += 1 * dx;
   } else if (IsKeyDown(KEY_S)) {
