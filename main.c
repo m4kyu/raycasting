@@ -38,7 +38,7 @@ int main() {
     ClearBackground(BLACK);
     drawMap();
     drawPlayer();
-    castRays(60);
+    castRays(80);
 
     DrawFPS(0, 0);
     EndDrawing();
@@ -74,12 +74,14 @@ void castRays(int fov) {
   float norm_y = (float)((int)pos_y % 100) / 100;
 
 
-  for (int i = -fov/2, j = 0; i < fov/2; i++, j++) {
+  float step1 = (float)fov / 500;
+  float start = -(float)fov / 2;
+  for (int i = 0, j = 0; i < 500; i++, j++, start += step1) {
       int index_x = pos_x / 100;
   int index_y = pos_y / 100;
 
-    float diry = sin((rotation + i) * PI / 180); 
-    float dirx = cos((rotation + i) * PI / 180); 
+    float diry = sin((rotation + start) * PI / 180); 
+    float dirx = cos((rotation + start) * PI / 180); 
     int cor_x = index_x, cor_y = index_y;
 
     Vector2 step = {sqrtf(1 + (diry / dirx) * (diry / dirx)), sqrtf(1 + (dirx / diry) * (dirx / diry))};
@@ -126,7 +128,7 @@ void castRays(int fov) {
     float wall_size = 500 / (distance * 3); 
     distance *= 100;
     DrawLineEx((Vector2){pos_x, pos_y}, (Vector2){pos_x + distance * dirx, pos_y + distance * diry}, 1, GREEN);
-    DrawLineEx((Vector2){500 + (j * 10), 250 - (wall_size / 2)}, (Vector2){500 + (j * 10), 250 + (wall_size / 2)}, 10, GREEN);
+    DrawLineEx((Vector2){500 + (j), 250 - (wall_size / 2)}, (Vector2){500 + (j), 250 + (wall_size / 2)}, 1, GREEN);
   }
 }
 
