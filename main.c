@@ -5,8 +5,8 @@
 #define DEGR2RAD PI / 180
 #define FOV 60 
 #define FPS 60
-#define SPEED 500
-#define ROTATION_SPEED 100
+#define SPEED 300
+#define ROTATION_SPEED 200
 
 #define CELL_SIZE 100
 #define MAP_WIDTH 10 
@@ -16,7 +16,7 @@
 #define HIGHT 1280
 
 
-Vector2 player = {110, 110};
+Vector2 player = {121, 121};
 Vector2 direction;
 float rotation = 0;
 
@@ -40,7 +40,6 @@ void castRays(int fov);
 void drawMap();
 
 
-
 int main() {
   SetConfigFlags(FLAG_VSYNC_HINT);
   InitWindow(WIDTH, HIGHT, "raycasting");
@@ -54,9 +53,10 @@ int main() {
     move(frame_time);
     BeginDrawing();
     ClearBackground(BLACK);
-//    drawMap();
     castRays(FOV);
- //   drawPlayer();
+//    drawMap();
+
+  //  drawPlayer();
 
 
     DrawFPS(0, 0);
@@ -153,34 +153,91 @@ void castRays(int fov) {
 			}
 		}
 
+    if (!hit) {
+      continue;
+    }
+
     float perpWallDist;
     if(side == 0) perpWallDist = (rayLen.x - deltaStep.x);
     else          perpWallDist = (rayLen.y - deltaStep.y);
 
-
-  //  DrawLineEx((Vector2){player.x, player.y}, (Vector2){player.x + distance * CELL_SIZE * dirx, player.y + distance * CELL_SIZE * diry}, 1, GREEN);
-
-    float wall_size = HIGHT / (perpWallDist); 
+    
+    float wall_size = HIGHT / (perpWallDist * 2); 
     DrawLineEx((Vector2){(j), ((float)HIGHT / 2) - (wall_size / 2)}, (Vector2){(j), ((float)HIGHT / 2) + (wall_size / 2)}, 1, color);
   }
 }
 
 void move(float frame_time) {
-  if (IsKeyDown(KEY_W)) {
-    player.y += SPEED * direction.y * frame_time;
-    player.x += SPEED * direction.x * frame_time;
-  } else if (IsKeyDown(KEY_S)) {
-    player.y -= SPEED * direction.y * frame_time;
-    player.x -= SPEED * direction.x * frame_time;
+  const float DIST = 10;
+  
+
+  float addx = 0, addy = 0;
+  int ismove = 0;
+ 
+  int index_x = player.x / CELL_SIZE;
+  int index_y = player.y / CELL_SIZE;
+  if (direction.x < 0) {
+    addx = -DIST;
+  } else if (direction.x > 0) {
+    addx = DIST;
+  }
+  if (direction.y < 0) {
+    addy = -DIST;
+  } else if (direction.y > 0){
+    addy = DIST;
   }
 
-  if (IsKeyDown(KEY_A)) {
-    player.x += SPEED * direction.y * frame_time;
-    player.y += SPEED * -direction.x * frame_time;
-  } else if (IsKeyDown(KEY_D)) {
-    player.x += SPEED * -direction.y * frame_time;
-    player.y += SPEED * direction.x * frame_time;
+    int new_x = (int)((player.x + addx) / CELL_SIZE);
+  int new_y = (int)((player.y + addy) / CELL_SIZE);
+  int new_x_back = (int)((player.x - addx) / CELL_SIZE);
+  int new_y_back = (int)((player.y - addy) / CELL_SIZE);
+
+
+  if (IsKeyDown(KEY_W)) {
+    if (map[index_y][new_x] == 0) {
+      player.x += SPEED * direction.x * frame_time;
+    }
+    if (map[new_y][index_x] == 0) {
+      player.y += SPEED * direction.y * frame_time;
+    }
+  } else if (IsKeyDown(KEY_S)) {
+    if (map[index_y][new_x_back] == 0) {
+      player.x -= SPEED * direction.x * frame_time;
+    }
+    if (map[new_y_back][index_x] == 0) {
+      player.y -= SPEED * direction.y * frame_time;
+    }
   }
+
+  index_x = player.x / CELL_SIZE;
+  index_y = player.y / CELL_SIZE;
+
+
+  int snew_x = (int)((player.x + addy) / CELL_SIZE);
+  int snew_y = (int)((player.y + addx) / CELL_SIZE);
+  int snew_x_back = (int)((player.x - addy) / CELL_SIZE);
+  int snew_y_back = (int)((player.y - addx) / CELL_SIZE);
+
+
+  if (IsKeyDown(KEY_A)) {
+    if (map[index_y][snew_x] == 0) {
+      player.x += SPEED * direction.y * frame_time;
+    }
+    if (map[snew_y_back][index_x] == 0) {
+      player.y -= SPEED * direction.x * frame_time;
+    }
+
+  } else if (IsKeyDown(KEY_D)) {
+    if (map[index_y][snew_x_back] == 0) {
+      printf("D\n");
+      player.x -= SPEED * direction.y * frame_time;
+    }
+    if (map[snew_y][index_x] == 0) {
+      player.y += SPEED * direction.x * frame_time;
+    }
+  }
+
+
 
   if (IsKeyDown(KEY_Q)) {
     rotation -= ROTATION_SPEED * frame_time;
@@ -192,5 +249,4 @@ void move(float frame_time) {
     direction.x = cos(rotation * PI / 180);
   }
 }
-
 
